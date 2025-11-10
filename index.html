@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mAImona - AI-Powered Trading Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-theme">
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-text">m<span class="logo-ai">AI</span>mona</span>
+                    <span class="logo-pulse"></span>
+                </div>
+                <nav class="nav">
+                    <a href="#hero" class="nav-link">Demo</a>
+                    <a href="#market" class="nav-link">Market</a>
+                    <a href="#about" class="nav-link">About</a>
+                    <a href="#faq" class="nav-link">FAQ</a>
+                </nav>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">Ask the market, let mAImona answer with real data.</h1>
+                <p class="hero-subtitle">An intelligent trading assistant connecting live market data with AI to deliver clear, unbiased insights.</p>
+                <button class="btn-primary" onclick="scrollToChat()">Try the Demo</button>
+            </div>
+            <div class="hero-background">
+                <div class="grid-overlay"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chat Section -->
+    <section id="chat" class="chat-section">
+        <div class="container-wide">
+            <h2 class="section-title">Chat with mAImona</h2>
+            <div class="chat-layout">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message message-bot">
+                            <div class="message-content">
+                                <p>Hello! I'm mAImona, your AI trading assistant. Ask me anything about market prices, volumes, indicators, or crypto concepts. How can I help you today?</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-suggestions">
+                        <button class="suggestion-chip" onclick="sendSuggestion('Analyze BTC/USDT in the last 24h.')">Analyze BTC/USDT in the last 24h.</button>
+                        <button class="suggestion-chip" onclick="sendSuggestion('Top 3 traded coins today.')">Top 3 traded coins today.</button>
+                        <button class="suggestion-chip" onclick="sendSuggestion('Explain Funding Rate in simple terms.')">Explain Funding Rate in simple terms.</button>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chatInput" class="chat-input" placeholder="Ask about any coin, price, or concept..." />
+                        <button class="send-button" id="sendButton" onclick="sendMessage()">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M2 10L18 2L10 18L9 11L2 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="market-sidebar">
+                    <h3 class="sidebar-title">Market Snapshot</h3>
+                    <div class="snapshot-cards" id="marketSnapshot">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                    <div class="ticker-container">
+                        <div class="ticker" id="ticker">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Market Overview Section -->
+    <section id="market" class="market-section">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2 class="section-title" style="margin: 0;">Market Overview</h2>
+                <div id="liveIndicator" class="live-indicator">
+                    <span class="live-dot"></span>
+                    <span class="live-text">Connecting...</span>
+                </div>
+            </div>
+            <div class="market-filters">
+                <button class="filter-btn active" data-filter="volume" onclick="filterMarket('volume')">Top Volume</button>
+                <button class="filter-btn" data-filter="gainers" onclick="filterMarket('gainers')">Top Gainers</button>
+                <button class="filter-btn" data-filter="losers" onclick="filterMarket('losers')">Top Losers</button>
+            </div>
+            <div class="market-table-container">
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Price</th>
+                            <th>24h Change</th>
+                            <th>Volume 24h</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marketTableBody">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Coin Modal -->
+    <div class="modal" id="coinModal">
+        <div class="modal-backdrop" onclick="closeCoinModal()"></div>
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeCoinModal()">&times;</button>
+            <div class="coin-header" id="coinHeader">
+                <!-- Will be populated by JavaScript -->
+            </div>
+            <div class="coin-chart">
+                <canvas id="coinChart"></canvas>
+            </div>
+            <div class="coin-ai-summary">
+                <h4>AI Summary</h4>
+                <p id="coinAiSummary">Analyzing market data...</p>
+            </div>
+            <div class="coin-info">
+                <h4>About</h4>
+                <p id="coinInfo">Loading information...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <section id="about" class="about-section">
+        <div class="container">
+            <h2 class="section-title">About mAImona</h2>
+            <div class="about-content">
+                <p>mAImona is an experimental project demonstrating how live market data can be combined with AI to help traders make sense of the markets. It does not execute trades or offer financial advice.</p>
+                <p>Our mission is to provide clear, data-driven insights without the noise and misleading predictions that often accompany market analysis. We connect to real-time data sources and use AI to explain what's happening in the market in plain language.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="faq-section">
+        <div class="container">
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(0)">
+                        <span>Where does mAImona get its data?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>mAImona retrieves data from trusted cryptocurrency exchanges and APIs such as Binance. All price, volume, and market data displayed is real-time or near real-time information from these sources.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(1)">
+                        <span>Does it give buy/sell recommendations?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>No. mAImona is designed to explain and summarize real market data, not to provide trading signals or investment recommendations. All information is for educational purposes only.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(2)">
+                        <span>Do I need to link my trading account?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Not for this demo version. mAImona currently focuses on providing market insights and educational content. No account linking or trading execution is required or supported.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(3)">
+                        <span>Is this financial advice?</span>
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>No. mAImona is an experimental information tool for educational purposes only. Nothing on this platform should be considered financial advice. Always do your own research and consult with licensed financial professionals.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">mAImona – an experimental information tool, not financial advice.</p>
+            <div class="footer-links">
+                <a href="#" class="footer-link">Terms of Use</a>
+                <a href="#" class="footer-link">Disclaimer</a>
+                <a href="#" class="footer-link">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="chart.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

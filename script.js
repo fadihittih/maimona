@@ -38,6 +38,30 @@ const coinDescriptions = {
     'AVAXUSDT': 'Avalanche is a layer one blockchain that functions as a platform for decentralized applications and custom blockchain networks.'
 };
 
+// Coin name aliases for flexible search
+const coinAliases = {
+    'bitcoin': ['btc', 'بيتكوين', 'بتكوين'],
+    'ethereum': ['eth', 'ايثريوم', 'إيثيريوم'],
+    'binance': ['bnb', 'بينانس'],
+    'solana': ['sol', 'سولانا'],
+    'ripple': ['xrp', 'ريبل'],
+    'cardano': ['ada', 'كاردانو'],
+    'dogecoin': ['doge', 'دوج', 'دوجكوين'],
+    'polygon': ['matic', 'بوليجون', 'ماتيك'],
+    'polkadot': ['dot', 'بولكادوت'],
+    'avalanche': ['avax', 'افالانش'],
+    'chainlink': ['link', 'تشين لينك'],
+    'uniswap': ['uni', 'يونيسواب'],
+    'litecoin': ['ltc', 'لايتكوين'],
+    'stellar': ['xlm', 'ستيلار'],
+    'cosmos': ['atom', 'كوزموس'],
+    'tron': ['trx', 'ترون'],
+    'shiba': ['shib', 'شيبا'],
+    'near': ['near', 'نير'],
+    'aptos': ['apt', 'ابتوس'],
+    'arbitrum': ['arb', 'اربتروم']
+};
+
 /* ===========================
    Binance API Functions
    =========================== */
@@ -345,6 +369,38 @@ function prepareMarketContext() {
 }
 
 /**
+ * Smart coin finder - supports symbols, full names, and aliases
+ */
+function findCoin(query) {
+    const lowerQuery = query.toLowerCase().trim();
+    
+    // Direct symbol match (e.g., "BTC", "BTCUSDT")
+    let coin = marketData.find(c => 
+        c.symbol.toLowerCase() === lowerQuery + 'usdt' || 
+        c.symbol.toLowerCase().replace('usdt', '') === lowerQuery
+    );
+    if (coin) return coin;
+    
+    // Check aliases
+    for (const [fullName, aliases] of Object.entries(coinAliases)) {
+        if (aliases.some(alias => lowerQuery.includes(alias)) || lowerQuery.includes(fullName)) {
+            // Find the corresponding coin
+            const symbol = aliases[0].toUpperCase();
+            coin = marketData.find(c => c.symbol.toLowerCase().startsWith(symbol.toLowerCase()));
+            if (coin) return coin;
+        }
+    }
+    
+    // Partial match in symbol
+    coin = marketData.find(c => 
+        c.symbol.toLowerCase().includes(lowerQuery) || 
+        lowerQuery.includes(c.symbol.toLowerCase().replace('usdt', ''))
+    );
+    
+    return coin;
+}
+
+/**
  * Fallback response generator (used when backend is unavailable)
  * Provides smart responses using live market data
  */
@@ -356,14 +412,13 @@ function generateFallbackResponse(message) {
         return `**مرحباً! أنا mAImona** 👋\n\nأنا مساعد تداول مدعوم بالذكاء الاصطناعي. يمكنني مساعدتك في:\n\n* **تحليل السوق** - معلومات حية عن العملات الرقمية\n* **أسعار العملات** - بيانات مباشرة من Binance\n* **الاتجاهات** - العملات الرائجة والأكثر تداولاً\n\nجرب أن تسألني: "ما سعر Bitcoin؟" أو "ما هي أكثر العملات تداولاً؟"`;
     }
     
-    // Check for specific coins
-    for (const coin of marketData) {
-        const symbol = coin.symbol.replace('USDT', '').toLowerCase();
-        if (lowerMessage.includes(symbol)) {
-            const changeDir = coin.change24h >= 0 ? 'ارتفع' : 'انخفض';
-            const changeSymbol = coin.change24h >= 0 ? '+' : '';
-            return `**${formatSymbol(coin.symbol)}** 📊\n\n* **السعر الحالي:** $${formatNumber(coin.price)}\n* **التغير 24 ساعة:** ${changeSymbol}${coin.change24h.toFixed(2)}% (${changeDir})\n* **حجم التداول:** $${formatVolume(coin.volume24h)}\n\nهذه بيانات مباشرة من Binance. تذكر، هذه معلومات فقط وليست نصيحة استثمارية.`;
-        }
+    // Try to find a specific coin using smart search
+    const foundCoin = findCoin(lowerMessage);
+    if (foundCoin) {
+        const changeDir = foundCoin.change24h >= 0 ? 'ارتفع' : 'انخفض';
+        const changeSymbol = foundCoin.change24h >= 0 ? '+' : '';
+        const emoji = foundCoin.change24h >= 0 ? '📈' : '📉';
+        return `**${formatSymbol(foundCoin.symbol)}** ${emoji}\n\n* **السعر الحالي:** $${formatNumber(foundCoin.price)}\n* **التغير 24 ساعة:** ${changeSymbol}${foundCoin.change24h.toFixed(2)}% (${changeDir})\n* **حجم التداول:** $${formatVolume(foundCoin.volume24h)}\n\n${coinDescriptions[foundCoin.symbol] || 'هذه بيانات مباشرة من Binance.'}\n\n💡 تذكر: هذه معلومات فقط وليست نصيحة استثمارية.`;
     }
     
     // Price questions

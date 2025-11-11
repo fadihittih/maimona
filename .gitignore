@@ -22,3 +22,11 @@ npm-debug.log*
 # Temporary files
 *.tmp
 *.temp
+
+# Node.js
+node_modules/
+backend/node_modules/
+
+# Environment variables
+.env
+backend/.env

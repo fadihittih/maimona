@@ -78,6 +78,8 @@ body.dark-theme {
     margin: 0 auto;
     padding: 0 1.25rem;
     width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .container-wide {
@@ -85,6 +87,8 @@ body.dark-theme {
     margin: 0 auto;
     padding: 0 1.25rem;
     width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 /* ===========================
@@ -290,6 +294,9 @@ body.dark-theme {
     grid-template-columns: 1fr 350px;
     gap: 2rem;
     align-items: start;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .chat-container {
@@ -299,6 +306,9 @@ body.dark-theme {
     display: flex;
     flex-direction: column;
     height: 600px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .light-theme .chat-container {
@@ -551,6 +561,9 @@ body.dark-theme {
 .market-sidebar {
     position: sticky;
     top: 100px;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .sidebar-title {
@@ -564,6 +577,8 @@ body.dark-theme {
     flex-direction: column;
     gap: 0.75rem;
     margin-bottom: 1.5rem;
+    width: 100%;
+    max-width: 100%;
 }
 
 .snapshot-card {
@@ -572,6 +587,9 @@ body.dark-theme {
     border: 1px solid;
     transition: var(--transition);
     cursor: pointer;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .light-theme .snapshot-card {
@@ -1305,6 +1323,8 @@ body.dark-theme {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
     gap: clamp(0.75rem, 1.5vw, 1rem);
+    width: 100%;
+    max-width: 100%;
 }
 
 .price-card {
@@ -1312,6 +1332,9 @@ body.dark-theme {
     flex-direction: column;
     gap: clamp(0.375rem, 0.75vw, 0.5rem);
     padding: clamp(0.875rem, 2vw, 1.25rem);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* Market Section */
@@ -1463,15 +1486,29 @@ body.dark-theme {
 @media (max-width: 1024px) {
     .container {
         padding: 0 1rem;
+        overflow-x: hidden;
     }
     
     .chat-layout {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
+        overflow: hidden;
     }
     
     .market-sidebar {
         position: static;
-        max-height: 300px;
+        max-height: none;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .snapshot-cards,
+    .snapshot-card,
+    .price-grid,
+    .price-card {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
     
     .hero-title {
@@ -1481,8 +1518,10 @@ body.dark-theme {
 
 /* Tablets */
 @media (max-width: 768px) {
-    .container {
+    .container,
+    .container-wide {
         padding: 0 1rem;
+        overflow-x: hidden;
     }
     
     .header-content {
@@ -1512,9 +1551,16 @@ body.dark-theme {
     }
     
     /* Chat improvements for mobile */
+    .chat-layout {
+        overflow: hidden;
+        width: 100%;
+    }
+    
     .chat-container {
         height: 400px;
         border-radius: 12px;
+        width: 100%;
+        max-width: 100%;
     }
     
     .chat-messages {
@@ -1524,12 +1570,14 @@ body.dark-theme {
     
     .message {
         max-width: 85%;
+        word-wrap: break-word;
     }
     
     .message-content {
         padding: 0.875rem 1rem;
         font-size: 0.95rem;
         line-height: 1.5;
+        max-width: 100%;
     }
     
     .chat-input-container {

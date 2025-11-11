@@ -1297,6 +1297,30 @@ body.dark-theme {
     .cta-button {
         min-height: 44px; /* iOS recommendation */
     }
+    
+    /* Suggestion buttons optimization */
+    .suggestion-buttons {
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+    
+    .suggestion-btn {
+        padding: 0.5rem 0.875rem;
+        font-size: 0.8rem;
+    }
+    
+    /* Price card optimization */
+    .price-card {
+        padding: 0.875rem;
+    }
+    
+    .price-card-title {
+        font-size: 0.8rem;
+    }
+    
+    .price-card-value {
+        font-size: 1.25rem;
+    }
 }
 
 /* Extra small devices */
@@ -1322,7 +1346,7 @@ body.dark-theme {
     }
     
     .chat-container {
-        height: 350px;
+        height: 320px;
         border-radius: 10px;
     }
     
@@ -1368,6 +1392,53 @@ body.dark-theme {
     .ticker-item {
         font-size: 0.75rem;
         padding: 0.5rem 0.75rem;
+    }
+    
+    /* Suggestion buttons for extra small screens */
+    .suggestion-buttons {
+        gap: 0.375rem;
+        padding: 0.625rem;
+        flex-wrap: wrap;
+    }
+    
+    .suggestion-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        flex: 0 1 calc(50% - 0.2rem);
+    }
+    
+    /* Market snapshot compact */
+    .market-snapshot {
+        padding: 0.875rem;
+    }
+    
+    .price-grid {
+        gap: 0.625rem;
+    }
+    
+    .price-card {
+        padding: 0.75rem;
+    }
+    
+    .price-card-title {
+        font-size: 0.75rem;
+    }
+    
+    .price-card-value {
+        font-size: 1.1rem;
+    }
+    
+    .price-card-change {
+        font-size: 0.75rem;
+    }
+    
+    /* Header compact */
+    .header-content {
+        padding: 0.625rem 0;
+    }
+    
+    .logo-text {
+        font-size: 1rem;
     }
 }
 

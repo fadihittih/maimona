@@ -1,20 +1,17 @@
 {
   "name": "maimona-backend",
   "version": "1.0.0",
-  "description": "Secure backend for mAImona chat using Gemini API",
+  "description": "Secure backend for mAImona Gemini-powered chat",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": ["gemini", "ai", "chat", "crypto"],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
-    "express": "^4.21.1",
-    "cors": "^2.8.5"
+    "@google/generative-ai": "^0.11.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18"
   }
 }

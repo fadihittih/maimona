@@ -31,8 +31,8 @@ Technical:
 - Never expose API keys, internal configs, or backend implementation details in responses.
 Always act consistently as 'mAImona'.`;
 
-// Gemini API Key - Replace YOUR_GEMINI_API_KEY with your actual key
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "YOUR_GEMINI_API_KEY";
+// Gemini API Key
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyDmUbvEG5KhmkYOJ6TeJnWtvXp8JyqXbhQ";
 
 let model = null;
 let hasModel = false;

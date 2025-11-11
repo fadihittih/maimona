@@ -1,6 +1,142 @@
-# mAImona Backend
+# mAImona Backend (Local)
 
-Secure Node.js backend for mAImona chat functionality using Google's Gemini API.
+Local Node.js backend for mAImona Gemini-powered chat.
+
+## 📋 Prerequisites
+
+- Node.js 18.x or higher
+- A Google Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
+
+```bash
+cd backend
+npm install
+```
+
+### 2. Set Your Gemini API Key
+
+You have two options:
+
+**Option A: Edit server.js directly (easiest for local dev)**
+1. Open `backend/server.js`
+2. Find the line: `const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "YOUR_GEMINI_API_KEY";`
+3. Replace `YOUR_GEMINI_API_KEY` with your actual API key
+4. Save the file
+
+**Option B: Use environment variable**
+```bash
+GEMINI_API_KEY=your_api_key_here node server.js
+```
+
+⚠️ **IMPORTANT**: Never commit your API key to version control! Use `.gitignore` to exclude any files with secrets.
+
+### 3. Run the Server
+
+```bash
+node server.js
+```
+
+You should see:
+```
+✅ Gemini model initialized successfully
+🚀 mAImona backend server started on port 3000
+📡 Health check: http://localhost:3000/api/health
+💬 Chat endpoint: http://localhost:3000/api/chat
+```
+
+## 🔌 API Endpoints
+
+### GET /api/health
+
+Health check endpoint to verify the server is running.
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "hasModel": true,
+  "message": "mAImona backend is running"
+}
+```
+
+### POST /api/chat
+
+Main chat endpoint that processes user messages using Gemini API.
+
+**Request:**
+```json
+{
+  "message": "What is Bitcoin?",
+  "marketContext": "BTC/USDT: $64,250.50, +2.5% (optional)"
+}
+```
+
+**Response:**
+```json
+{
+  "reply": "Bitcoin is the first decentralized cryptocurrency..."
+}
+```
+
+**Error Response:**
+```json
+{
+  "error": "Error message here"
+}
+```
+
+## 🧪 Testing
+
+### Test Health Endpoint:
+```bash
+curl http://localhost:3000/api/health
+```
+
+### Test Chat Endpoint:
+```bash
+curl -X POST http://localhost:3000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What is Bitcoin?"}'
+```
+
+## 🔒 Security
+
+- ✅ API key is read from environment variables or hardcoded locally (for dev only)
+- ✅ CORS enabled for all origins (local development)
+- ✅ Input validation on all requests
+- ⚠️ **Never commit your API key to Git!**
+
+## 🛠️ Development
+
+The backend runs on `http://localhost:3000` by default.
+
+Make sure your frontend in `script.js` points to:
+```javascript
+const MAIMONA_API_URL = "http://localhost:3000/api/chat";
+```
+
+## 🐛 Troubleshooting
+
+### Error: "GEMINI_API_KEY is not set or is placeholder"
+- Edit `server.js` and replace `YOUR_GEMINI_API_KEY` with your actual key
+- OR set the environment variable: `GEMINI_API_KEY=your_key node server.js`
+
+### Error: "Address already in use"
+- Port 3000 is already taken
+- Stop other services on port 3000, or change the PORT in server.js
+
+### Error: "Cannot find module 'express'"
+- Run `npm install` in the backend directory
+
+## 📝 Notes
+
+- Backend uses `gemini-1.5-flash` model
+- System instruction defines mAImona's persona and behavior
+- Responses are educational and never give trading advice
+- This is a local development setup - not for production deployment
 
 ## 📋 Prerequisites
 

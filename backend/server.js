@@ -1,6 +1,6 @@
 /**
  * mAImona Backend Server
- * Secure Node.js backend for Gemini API chat integration
+ * Local Node.js backend for Gemini API chat integration
  */
 
 const express = require("express");
@@ -10,18 +10,11 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ===== CORS =====
-// مفتوح لكل الأورجنز مؤقتًا (MVP)
-app.use(
-  cors({
-    origin: true,
-    methods: ["GET", "POST"],
-  })
-);
-
+// CORS - allow all origins for local development
+app.use(cors());
 app.use(express.json());
 
-// ===== System Instruction =====
+// System Instruction for mAImona
 const SYSTEM_INSTRUCTION = `You are mAImona, an AI-powered crypto market assistant integrated into a live market dashboard.
 Your role:
 - Explain cryptocurrency market data clearly and accurately.
@@ -38,26 +31,28 @@ Technical:
 - Never expose API keys, internal configs, or backend implementation details in responses.
 Always act consistently as 'mAImona'.`;
 
-// ===== Gemini Init =====
-const apiKey = process.env.GEMINI_API_KEY;
+// Gemini API Key - Replace YOUR_GEMINI_API_KEY with your actual key
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "YOUR_GEMINI_API_KEY";
+
 let model = null;
 let hasModel = false;
 
-if (!apiKey) {
-  console.error("❌ GEMINI_API_KEY is not set");
+if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_GEMINI_API_KEY") {
+  console.warn("⚠️  GEMINI_API_KEY is not set or is placeholder. Please set your API key.");
+  console.warn("    You can set it in server.js or use: GEMINI_API_KEY=your_key node server.js");
+  hasModel = false;
 } else {
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       systemInstruction: SYSTEM_INSTRUCTION,
     });
-
     hasModel = true;
     console.log("✅ Gemini model initialized successfully");
   } catch (err) {
     console.error("❌ Failed to initialize Gemini model:", err.message);
+    hasModel = false;
   }
 }
 
@@ -70,13 +65,12 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// ===== Chat Endpoint =====
+// Chat Endpoint
 app.post("/api/chat", async (req, res) => {
   try {
     if (!hasModel || !model) {
       return res.status(500).json({
-        error:
-          "AI backend is not configured correctly. Please check GEMINI_API_KEY.",
+        error: "AI backend is not configured correctly. Please check GEMINI_API_KEY.",
       });
     }
 
@@ -90,19 +84,10 @@ app.post("/api/chat", async (req, res) => {
 
     let promptText;
 
-    if (
-      marketContext &&
-      typeof marketContext === "string" &&
-      marketContext.trim()
-    ) {
-      promptText =
-        `You are mAImona.\n` +
-        `Here is current market context:\n${marketContext.trim()}\n\n` +
-        `User question:\n${message.trim()}`;
+    if (marketContext && typeof marketContext === "string" && marketContext.trim()) {
+      promptText = `You are mAImona.\nHere is current market context:\n${marketContext.trim()}\n\nUser question:\n${message.trim()}`;
     } else {
-      promptText =
-        `You are mAImona.\n` +
-        `User question:\n${message.trim()}`;
+      promptText = `You are mAImona.\nUser question:\n${message.trim()}`;
     }
 
     const result = await model.generateContent({
@@ -114,35 +99,32 @@ app.post("/api/chat", async (req, res) => {
       ],
     });
 
-    const reply = result?.response?.text?.();
+    const reply = result.response.text();
 
     if (!reply || !reply.trim()) {
-      console.error(
-        "⚠️ Empty reply from Gemini:",
-        JSON.stringify(result, null, 2)
-      );
+      console.error("⚠️ Empty reply from Gemini");
       return res.status(500).json({
-        error:
-          "I received an empty response from the AI service. Please try again.",
+        error: "I received an empty response from the AI service. Please try again.",
       });
     }
 
     return res.json({ reply: reply.trim() });
   } catch (err) {
-    console.error("❌ Error in /api/chat:", err?.message || err);
+    console.error("❌ Error in /api/chat:", err.message || err);
     return res.status(500).json({
-      error:
-        "I apologize, but I encountered an error processing your request. Please try again in a moment.",
+      error: "I apologize, but I encountered an error processing your request. Please try again in a moment.",
     });
   }
 });
 
-// ===== 404 =====
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: "Endpoint not found" });
 });
 
-// ===== Start Server =====
+// Start server
 app.listen(PORT, () => {
-  console.log(`🚀 mAImona backend listening on port ${PORT}`);
+  console.log(`🚀 mAImona backend server started on port ${PORT}`);
+  console.log(`📡 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`💬 Chat endpoint: http://localhost:${PORT}/api/chat`);
 });

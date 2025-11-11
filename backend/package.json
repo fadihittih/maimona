@@ -1,7 +1,7 @@
 {
   "name": "maimona-backend",
   "version": "1.0.0",
-  "description": "Secure backend for mAImona Gemini-powered chat",
+  "description": "Local backend for mAImona Gemini-powered chat",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

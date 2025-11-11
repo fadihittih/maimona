@@ -352,7 +352,7 @@ function generateFallbackResponse(message) {
     const lowerMessage = message.toLowerCase();
     
     // Greeting
-    if (lowerMessage.match(/^(hi|hello|hey|مرحبا|السلام)/)) {
+    if (lowerMessage.match(/^(hi|hello|hey|مرحبا|السلام|أهلا)/)) {
         return `**مرحباً! أنا mAImona** 👋\n\nأنا مساعد تداول مدعوم بالذكاء الاصطناعي. يمكنني مساعدتك في:\n\n* **تحليل السوق** - معلومات حية عن العملات الرقمية\n* **أسعار العملات** - بيانات مباشرة من Binance\n* **الاتجاهات** - العملات الرائجة والأكثر تداولاً\n\nجرب أن تسألني: "ما سعر Bitcoin؟" أو "ما هي أكثر العملات تداولاً؟"`;
     }
     
@@ -366,8 +366,14 @@ function generateFallbackResponse(message) {
         }
     }
     
+    // Price questions
+    if (lowerMessage.match(/(سعر|price|كم|how much)/)) {
+        const top3 = marketData.slice(0, 3);
+        return `**أسعار أكثر العملات تداولاً الآن:** 💰\n\n* **${formatSymbol(top3[0].symbol)}:** $${formatNumber(top3[0].price)} (${top3[0].change24h >= 0 ? '+' : ''}${top3[0].change24h.toFixed(2)}%)\n* **${formatSymbol(top3[1].symbol)}:** $${formatNumber(top3[1].price)} (${top3[1].change24h >= 0 ? '+' : ''}${top3[1].change24h.toFixed(2)}%)\n* **${formatSymbol(top3[2].symbol)}:** $${formatNumber(top3[2].price)} (${top3[2].change24h >= 0 ? '+' : ''}${top3[2].change24h.toFixed(2)}%)\n\nاسألني عن أي عملة محددة للمزيد من التفاصيل!`;
+    }
+    
     // Top coins
-    if (lowerMessage.includes('top') || lowerMessage.includes('أفضل') || lowerMessage.includes('أكثر')) {
+    if (lowerMessage.match(/(top|أفضل|أكثر|الأعلى|highest|most)/)) {
         const top5 = marketData.slice(0, 5);
         let response = '**أكثر 5 عملات تداولاً حالياً:** 📈\n\n';
         top5.forEach((coin, i) => {
@@ -378,7 +384,7 @@ function generateFallbackResponse(message) {
     }
     
     // Market summary
-    if (lowerMessage.includes('market') || lowerMessage.includes('سوق') || lowerMessage.includes('overview')) {
+    if (lowerMessage.match(/(market|سوق|overview|تحليل|analysis|summary|ملخص)/)) {
         const gainers = marketData.filter(c => c.change24h > 0).length;
         const losers = marketData.filter(c => c.change24h < 0).length;
         const topGainer = marketData.reduce((a, b) => a.change24h > b.change24h ? a : b);
@@ -387,8 +393,55 @@ function generateFallbackResponse(message) {
         return `**ملخص السوق الحالي** 📊\n\n* **العملات في ارتفاع:** ${gainers} 🟢\n* **العملات في انخفاض:** ${losers} 🔴\n* **الأكثر ارتفاعاً:** ${formatSymbol(topGainer.symbol)} (+${topGainer.change24h.toFixed(2)}%)\n* **الأكثر انخفاضاً:** ${formatSymbol(topLoser.symbol)} (${topLoser.change24h.toFixed(2)}%)\n\nيمكنك استكشاف المزيد في الجدول أدناه.`;
     }
     
-    // Default
-    return `أنا mAImona، مساعدك للعملات الرقمية! 🤖\n\nلدي بيانات حية لـ **${marketData.length} عملة رقمية** من Binance.\n\nجرب أن تسألني عن:\n* عملة معينة (مثل "Bitcoin" أو "Ethereum")\n* السوق بشكل عام\n* أكثر العملات تداولاً\n\nيمكنك أيضاً استكشاف الجدول المباشر أدناه! 📈`;
+    // Trending/gainers/losers
+    if (lowerMessage.match(/(trend|رائج|gainer|ارتفاع|loser|انخفاض|falling|rising)/)) {
+        const sorted = [...marketData].sort((a, b) => b.change24h - a.change24h);
+        const topGainers = sorted.slice(0, 3);
+        const topLosers = sorted.slice(-3).reverse();
+        
+        let response = '**أكثر العملات ارتفاعاً اليوم:** 🚀\n\n';
+        topGainers.forEach((coin, i) => {
+            response += `${i + 1}. **${formatSymbol(coin.symbol)}** +${coin.change24h.toFixed(2)}% ($${formatNumber(coin.price)})\n`;
+        });
+        
+        response += '\n**أكثر العملات انخفاضاً اليوم:** 📉\n\n';
+        topLosers.forEach((coin, i) => {
+            response += `${i + 1}. **${formatSymbol(coin.symbol)}** ${coin.change24h.toFixed(2)}% ($${formatNumber(coin.price)})\n`;
+        });
+        
+        return response;
+    }
+    
+    // Help/What can you do
+    if (lowerMessage.match(/(help|مساعدة|what can|ماذا تستطيع|إيش بتقدر)/)) {
+        return `**يمكنني مساعدتك في:** 🤖\n\n* **معلومات العملات** - اسأل عن أي عملة مثل "Bitcoin" أو "Ethereum"\n* **أسعار حية** - "ما سعر BTC؟" أو "كم سعر ETH؟"\n* **ملخص السوق** - "كيف حال السوق؟" أو "market overview"\n* **الترندات** - "أكثر العملات ارتفاعاً" أو "top gainers"\n* **مقارنات** - "قارن بين BTC و ETH"\n\n**جرب الآن!** اكتب سؤالك أدناه 👇`;
+    }
+    
+    // Compare coins
+    if (lowerMessage.match(/(compare|قارن|vs|versus|مقابل)/)) {
+        const words = lowerMessage.split(/\s+/);
+        const foundCoins = [];
+        
+        for (const word of words) {
+            for (const coin of marketData.slice(0, 20)) {
+                const symbol = coin.symbol.replace('USDT', '').toLowerCase();
+                if (word.includes(symbol) && !foundCoins.find(c => c.symbol === coin.symbol)) {
+                    foundCoins.push(coin);
+                    if (foundCoins.length === 2) break;
+                }
+            }
+            if (foundCoins.length === 2) break;
+        }
+        
+        if (foundCoins.length === 2) {
+            const [coin1, coin2] = foundCoins;
+            return `**مقارنة:** ${formatSymbol(coin1.symbol)} vs ${formatSymbol(coin2.symbol)} ⚖️\n\n**${formatSymbol(coin1.symbol)}:**\n* السعر: $${formatNumber(coin1.price)}\n* التغير: ${coin1.change24h >= 0 ? '+' : ''}${coin1.change24h.toFixed(2)}%\n* الحجم: $${formatVolume(coin1.volume24h)}\n\n**${formatSymbol(coin2.symbol)}:**\n* السعر: $${formatNumber(coin2.price)}\n* التغير: ${coin2.change24h >= 0 ? '+' : ''}${coin2.change24h.toFixed(2)}%\n* الحجم: $${formatVolume(coin2.volume24h)}`;
+        }
+    }
+    
+    // If nothing matched, give a helpful response based on available data
+    const randomCoin = marketData[Math.floor(Math.random() * Math.min(10, marketData.length))];
+    return `لم أفهم سؤالك تماماً، لكن يمكنني مساعدتك! 🤔\n\n**على سبيل المثال، حالياً:**\n* **${formatSymbol(randomCoin.symbol)}** يتداول عند $${formatNumber(randomCoin.price)}\n* التغير 24 ساعة: ${randomCoin.change24h >= 0 ? '+' : ''}${randomCoin.change24h.toFixed(2)}%\n\n**جرب أن تسأل:**\n* "ما سعر Bitcoin؟"\n* "أكثر العملات تداولاً"\n* "كيف حال السوق؟"\n* "قارن بين BTC و ETH"`;
 }
 
 function sendSuggestion(text) {

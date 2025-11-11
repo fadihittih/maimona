@@ -240,8 +240,11 @@ function scrollToChat() {
    Chat Functionality
    =========================== */
 
-// Backend API URL - Local development
-const MAIMONA_API_URL = "http://localhost:3001/api/chat";
+// Backend API URL - Auto-detect environment
+const MAIMONA_API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? "http://localhost:3001/api/chat"  // Local development
+    : null;  // GitHub Pages - use fallback responses
+
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 const sendButton = document.getElementById('sendButton');
@@ -270,6 +273,16 @@ async function sendMessage() {
     try {
         // Prepare market context (optional - include current top coins data)
         const marketContext = prepareMarketContext();
+        
+        // Check if backend is available
+        if (!MAIMONA_API_URL) {
+            // No backend - use smart fallback
+            await new Promise(resolve => setTimeout(resolve, 800)); // Simulate thinking
+            hideTypingIndicator();
+            const fallbackResponse = generateFallbackResponse(message);
+            addMessage(fallbackResponse, 'bot');
+            return;
+        }
         
         // Call backend API
         const response = await fetch(MAIMONA_API_URL, {
@@ -333,30 +346,49 @@ function prepareMarketContext() {
 
 /**
  * Fallback response generator (used when backend is unavailable)
- * Provides basic responses using local market data
+ * Provides smart responses using live market data
  */
 function generateFallbackResponse(message) {
     const lowerMessage = message.toLowerCase();
     
-    // Check for specific keywords with live data
-    if (lowerMessage.includes('btc') || lowerMessage.includes('bitcoin')) {
-        const btcData = marketData.find(c => c.symbol === 'BTCUSDT');
-        if (btcData) {
-            return `Based on current live data, BTC/USDT is trading at $${formatNumber(btcData.price)}, showing a ${btcData.change24h > 0 ? 'gain' : 'decline'} of ${btcData.change24h > 0 ? '+' : ''}${btcData.change24h.toFixed(2)}% in the last 24 hours. The trading volume stands at $${formatVolume(btcData.volume24h)}.`;
-        }
-    } else if (lowerMessage.includes('eth') || lowerMessage.includes('ethereum')) {
-        const ethData = marketData.find(c => c.symbol === 'ETHUSDT');
-        if (ethData) {
-            return `ETH/USDT is currently priced at $${formatNumber(ethData.price)}, ${ethData.change24h > 0 ? 'up' : 'down'} ${ethData.change24h > 0 ? '+' : ''}${ethData.change24h.toFixed(2)}% in the last 24 hours.`;
-        }
-    } else if (lowerMessage.includes('top') && (lowerMessage.includes('coin') || lowerMessage.includes('traded'))) {
-        if (marketData.length >= 3) {
-            const top3 = marketData.slice(0, 3);
-            return `The top 3 most traded coins by 24h volume are: 1) ${formatSymbol(top3[0].symbol)} ($${formatVolume(top3[0].volume24h)}), 2) ${formatSymbol(top3[1].symbol)} ($${formatVolume(top3[1].volume24h)}), and 3) ${formatSymbol(top3[2].symbol)} ($${formatVolume(top3[2].volume24h)}).`;
+    // Greeting
+    if (lowerMessage.match(/^(hi|hello|hey|مرحبا|السلام)/)) {
+        return `**مرحباً! أنا mAImona** 👋\n\nأنا مساعد تداول مدعوم بالذكاء الاصطناعي. يمكنني مساعدتك في:\n\n* **تحليل السوق** - معلومات حية عن العملات الرقمية\n* **أسعار العملات** - بيانات مباشرة من Binance\n* **الاتجاهات** - العملات الرائجة والأكثر تداولاً\n\nجرب أن تسألني: "ما سعر Bitcoin؟" أو "ما هي أكثر العملات تداولاً؟"`;
+    }
+    
+    // Check for specific coins
+    for (const coin of marketData) {
+        const symbol = coin.symbol.replace('USDT', '').toLowerCase();
+        if (lowerMessage.includes(symbol)) {
+            const changeDir = coin.change24h >= 0 ? 'ارتفع' : 'انخفض';
+            const changeSymbol = coin.change24h >= 0 ? '+' : '';
+            return `**${formatSymbol(coin.symbol)}** 📊\n\n* **السعر الحالي:** $${formatNumber(coin.price)}\n* **التغير 24 ساعة:** ${changeSymbol}${coin.change24h.toFixed(2)}% (${changeDir})\n* **حجم التداول:** $${formatVolume(coin.volume24h)}\n\nهذه بيانات مباشرة من Binance. تذكر، هذه معلومات فقط وليست نصيحة استثمارية.`;
         }
     }
     
-    return 'I apologize, but I\'m having trouble connecting to my AI service at the moment. Please check that the backend is properly configured and try again. In the meantime, you can explore the live market data in the table below.';
+    // Top coins
+    if (lowerMessage.includes('top') || lowerMessage.includes('أفضل') || lowerMessage.includes('أكثر')) {
+        const top5 = marketData.slice(0, 5);
+        let response = '**أكثر 5 عملات تداولاً حالياً:** 📈\n\n';
+        top5.forEach((coin, i) => {
+            const changeEmoji = coin.change24h >= 0 ? '🟢' : '🔴';
+            response += `${i + 1}. **${formatSymbol(coin.symbol)}** ${changeEmoji}\n   السعر: $${formatNumber(coin.price)} | التغير: ${coin.change24h >= 0 ? '+' : ''}${coin.change24h.toFixed(2)}%\n\n`;
+        });
+        return response + 'البيانات محدثة مباشرة من Binance.';
+    }
+    
+    // Market summary
+    if (lowerMessage.includes('market') || lowerMessage.includes('سوق') || lowerMessage.includes('overview')) {
+        const gainers = marketData.filter(c => c.change24h > 0).length;
+        const losers = marketData.filter(c => c.change24h < 0).length;
+        const topGainer = marketData.reduce((a, b) => a.change24h > b.change24h ? a : b);
+        const topLoser = marketData.reduce((a, b) => a.change24h < b.change24h ? a : b);
+        
+        return `**ملخص السوق الحالي** 📊\n\n* **العملات في ارتفاع:** ${gainers} 🟢\n* **العملات في انخفاض:** ${losers} 🔴\n* **الأكثر ارتفاعاً:** ${formatSymbol(topGainer.symbol)} (+${topGainer.change24h.toFixed(2)}%)\n* **الأكثر انخفاضاً:** ${formatSymbol(topLoser.symbol)} (${topLoser.change24h.toFixed(2)}%)\n\nيمكنك استكشاف المزيد في الجدول أدناه.`;
+    }
+    
+    // Default
+    return `أنا mAImona، مساعدك للعملات الرقمية! 🤖\n\nلدي بيانات حية لـ **${marketData.length} عملة رقمية** من Binance.\n\nجرب أن تسألني عن:\n* عملة معينة (مثل "Bitcoin" أو "Ethereum")\n* السوق بشكل عام\n* أكثر العملات تداولاً\n\nيمكنك أيضاً استكشاف الجدول المباشر أدناه! 📈`;
 }
 
 function sendSuggestion(text) {

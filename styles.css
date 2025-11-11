@@ -39,12 +39,20 @@
 
 html {
     scroll-behavior: smooth;
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
 }
 
 body {
     font-family: var(--font-primary);
     line-height: 1.6;
     transition: var(--transition);
+    /* Prevent horizontal scroll */
+    overflow-x: hidden;
+    width: 100%;
+    /* Better text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* ===========================
@@ -68,13 +76,15 @@ body.dark-theme {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 1.25rem;
+    width: 100%;
 }
 
 .container-wide {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 1.25rem;
+    width: 100%;
 }
 
 /* ===========================
@@ -1101,16 +1111,27 @@ body.dark-theme {
    Responsive Design
    =========================== */
 
+/* Large Tablets and Small Laptops */
 @media (max-width: 1024px) {
+    .container {
+        padding: 0 1rem;
+    }
+    
     .chat-layout {
         grid-template-columns: 1fr;
     }
     
     .market-sidebar {
         position: static;
+        max-height: 300px;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
     }
 }
 
+/* Tablets */
 @media (max-width: 768px) {
     .container {
         padding: 0 1rem;
@@ -1160,6 +1181,7 @@ body.dark-theme {
     .message-content {
         padding: 0.875rem 1rem;
         font-size: 0.95rem;
+        line-height: 1.5;
     }
     
     .chat-input-container {
@@ -1237,8 +1259,8 @@ body.dark-theme {
     }
 }
 
-/* Extra small devices */
-@media (max-width: 480px) {
+/* Large Phones */
+@media (max-width: 640px) {
     .hero-title {
         font-size: 1.5rem;
     }
@@ -1248,14 +1270,129 @@ body.dark-theme {
     }
     
     .chat-container {
+        height: 380px;
+    }
+    
+    .message {
+        max-width: 88%;
+        font-size: 0.9rem;
+    }
+    
+    .message-content ul {
+        padding-left: 1.25rem;
+    }
+    
+    .market-snapshot {
+        padding: 1rem;
+    }
+    
+    .coin-stats {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    /* Better touch targets */
+    .filter-btn,
+    .send-button,
+    .cta-button {
+        min-height: 44px; /* iOS recommendation */
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+    
+    .hero {
+        padding: 2rem 0;
+    }
+    
+    .hero-title {
+        font-size: 1.35rem;
+    }
+    
+    .hero-description {
+        font-size: 0.9rem;
+    }
+    
+    .logo-text {
+        font-size: 1.1rem;
+    }
+    
+    .chat-container {
         height: 350px;
+        border-radius: 10px;
     }
     
     .message {
         max-width: 90%;
     }
     
-    .coin-stats {
-        grid-template-columns: 1fr;
+    .message-content {
+        padding: 0.75rem 0.875rem;
+        font-size: 0.875rem;
+    }
+    
+    .chat-input-container {
+        flex-direction: row;
+        padding: 0.75rem;
+    }
+    
+    #chatInput {
+        font-size: 16px; /* Prevent iOS zoom */
+        padding: 0.625rem;
+    }
+    
+    .send-button {
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .market-table {
+        font-size: 0.8rem;
+    }
+    
+    .market-table th,
+    .market-table td {
+        padding: 0.5rem 0.25rem;
+    }
+    
+    /* Hide more columns on very small screens */
+    .market-table th:nth-child(3),
+    .market-table td:nth-child(3) {
+        display: none;
+    }
+    
+    .ticker-item {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+/* Landscape mobile phones */
+@media (max-width: 768px) and (orientation: landscape) {
+    .chat-container {
+        height: 300px;
+    }
+    
+    .hero {
+        padding: 2rem 0;
+    }
+}
+
+/* Very large screens */
+@media (min-width: 1920px) {
+    .container {
+        max-width: 1600px;
+    }
+    
+    .container-wide {
+        max-width: 1800px;
+    }
+    
+    .hero-title {
+        font-size: 4rem;
     }
 }

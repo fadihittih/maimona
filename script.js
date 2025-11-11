@@ -496,6 +496,19 @@ function generateFallbackResponse(message) {
     
     // If nothing matched, give a helpful response based on available data
     const randomCoin = marketData[Math.floor(Math.random() * Math.min(10, marketData.length))];
+    
+    // General questions handling
+    if (lowerMessage.match(/(what|who|how|why|when|where|ما|من|كيف|لماذا|متى|أين|شو|ليش|وين)/)) {
+        // Check if it's about crypto/finance
+        if (lowerMessage.match(/(crypto|coin|token|blockchain|trading|invest|wallet|بلوكتشين|تداول|محفظة|استثمار)/)) {
+            return `سؤال جيد! 🤔\n\nأنا متخصص في تحليل **بيانات السوق الحية** للعملات الرقمية. بإمكاني أن أخبرك عن:\n\n* الأسعار الحالية والتغيرات\n* أحجام التداول\n* الترندات والمقارنات\n\nلكن للأسئلة التعليمية المتعمقة، أنصحك بزيارة:\n* [CoinMarketCap Learn](https://coinmarketcap.com/learn/)\n* [Binance Academy](https://academy.binance.com/)\n\nأو اسألني عن عملة محددة! مثلاً: "ما سعر ${formatSymbol(randomCoin.symbol)}؟" 📊`;
+        } else {
+            // General non-crypto question
+            return `أهلاً! 👋\n\nأنا **mAImona** - مساعد متخصص في **تحليل أسواق العملات الرقمية**.\n\nيمكنني مساعدتك في:\n✅ أسعار العملات الحية\n✅ تحليل السوق والترندات\n✅ مقارنة العملات\n✅ حجم التداول والتغيرات\n\nلكن للأسئلة العامة خارج العملات الرقمية، قد تحتاج لمساعد آخر مثل ChatGPT.\n\n💡 **جرب الآن:** اسألني "ما هي أكثر العملات ارتفاعاً؟"`;
+        }
+    }
+    
+    // Random helpful suggestion
     return `لم أفهم سؤالك تماماً، لكن يمكنني مساعدتك! 🤔\n\n**على سبيل المثال، حالياً:**\n* **${formatSymbol(randomCoin.symbol)}** يتداول عند $${formatNumber(randomCoin.price)}\n* التغير 24 ساعة: ${randomCoin.change24h >= 0 ? '+' : ''}${randomCoin.change24h.toFixed(2)}%\n\n**جرب أن تسأل:**\n* "ما سعر Bitcoin؟"\n* "أكثر العملات تداولاً"\n* "كيف حال السوق؟"\n* "قارن بين BTC و ETH"`;
 }
 

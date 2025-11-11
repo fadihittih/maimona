@@ -793,6 +793,16 @@ function formatVolume(num) {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Initializing mAImona with live Binance data...');
     
+    // Register Service Worker for better caching
+    if ('serviceWorker' in navigator) {
+        try {
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            console.log('✅ Service Worker registered:', registration);
+        } catch (error) {
+            console.log('⚠️ Service Worker registration failed:', error);
+        }
+    }
+    
     // Try WebSocket first for real-time updates
     if (useWebSocket) {
         initBinanceWebSocket();

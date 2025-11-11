@@ -283,6 +283,12 @@ async function sendMessage() {
     const message = chatInput.value.trim();
     if (!message) return;
     
+    // Hide suggestion chips after first message
+    const suggestionChips = document.querySelector('.chat-suggestions');
+    if (suggestionChips) {
+        suggestionChips.style.display = 'none';
+    }
+    
     // Add user message
     addMessage(message, 'user');
     chatInput.value = '';
@@ -515,6 +521,12 @@ function generateFallbackResponse(message) {
 function sendSuggestion(text) {
     chatInput.value = text;
     sendMessage();
+    
+    // Hide suggestion buttons after first use
+    const suggestionsContainer = document.querySelector('.chat-suggestions');
+    if (suggestionsContainer) {
+        suggestionsContainer.style.display = 'none';
+    }
 }
 
 /**

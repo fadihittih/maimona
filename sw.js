@@ -1,5 +1,5 @@
 // Service Worker for cache management
-const CACHE_VERSION = 'maimona-v1.7';
+const CACHE_VERSION = 'maimona-v2.0';
 const urlsToCache = [
   '/',
   '/index.html',

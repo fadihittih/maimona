@@ -242,8 +242,7 @@ function scrollToChat() {
 
 // Backend API URL - CONFIGURE THIS AFTER DEPLOYMENT
 // Replace with your deployed backend URL (e.g., https://your-backend.onrender.com/api/chat)
-const MAIMONA_API_URL = "https://YOUR-BACKEND-DOMAIN/api/chat";
-
+const MAIMONA_API_URL = "https://maimona.onrender.com/api/chat";
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 const sendButton = document.getElementById('sendButton');

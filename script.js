@@ -241,7 +241,7 @@ function scrollToChat() {
    =========================== */
 
 // Backend API URL - Local development
-const MAIMONA_API_URL = "http://localhost:3000/api/chat";
+const MAIMONA_API_URL = "http://localhost:3001/api/chat";
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 const sendButton = document.getElementById('sendButton');

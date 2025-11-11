@@ -8,7 +8,7 @@ const cors = require("cors");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // CORS - allow all origins for local development
 app.use(cors());
@@ -38,14 +38,13 @@ let model = null;
 let hasModel = false;
 
 if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_GEMINI_API_KEY") {
-  console.warn("⚠️  GEMINI_API_KEY is not set or is placeholder. Please set your API key.");
-  console.warn("    You can set it in server.js or use: GEMINI_API_KEY=your_key node server.js");
+  console.warn("⚠️  GEMINI_API_KEY is not set. Please set your API key.");
   hasModel = false;
 } else {
   try {
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash-preview-05-20",
       systemInstruction: SYSTEM_INSTRUCTION,
     });
     hasModel = true;
@@ -90,16 +89,12 @@ app.post("/api/chat", async (req, res) => {
       promptText = `You are mAImona.\nUser question:\n${message.trim()}`;
     }
 
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: promptText }],
-        },
-      ],
-    });
+    console.log("📩 Received request:", { message, hasContext: !!marketContext });
 
+    const result = await model.generateContent(promptText);
     const reply = result.response.text();
+
+    console.log("✅ Generated reply:", { length: reply.length });
 
     if (!reply || !reply.trim()) {
       console.error("⚠️ Empty reply from Gemini");
@@ -111,6 +106,7 @@ app.post("/api/chat", async (req, res) => {
     return res.json({ reply: reply.trim() });
   } catch (err) {
     console.error("❌ Error in /api/chat:", err.message || err);
+    console.error("Full error:", err);
     return res.status(500).json({
       error: "I apologize, but I encountered an error processing your request. Please try again in a moment.",
     });

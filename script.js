@@ -364,6 +364,46 @@ function sendSuggestion(text) {
     sendMessage();
 }
 
+/**
+ * Convert Markdown formatting to HTML
+ */
+function markdownToHtml(text) {
+    let html = text;
+    
+    // Headers: ## Header
+    html = html.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+    html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^# (.+)$/gm, '<h2>$1</h2>');
+    
+    // Bold: **text** or __text__
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    
+    // Italic: *text* or _text_ (but not in ** or __)
+    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+    
+    // Code: `code`
+    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+    
+    // Unordered lists: * item or - item
+    html = html.replace(/^\* (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+    
+    // Wrap consecutive <li> in <ul>
+    html = html.replace(/(<li>.*?<\/li>\s*)+/g, '<ul>$&</ul>');
+    
+    // Line breaks: double newline = paragraph, single = <br>
+    html = html.replace(/\n\n/g, '</p><p>');
+    html = html.replace(/\n/g, '<br>');
+    
+    // Wrap in paragraph if not already wrapped
+    if (!html.startsWith('<')) {
+        html = '<p>' + html + '</p>';
+    }
+    
+    return html;
+}
+
 function addMessage(text, type) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message message-${type}`;
@@ -372,7 +412,13 @@ function addMessage(text, type) {
     contentDiv.className = 'message-content';
     
     const textP = document.createElement('p');
-    textP.textContent = text;
+    
+    // Convert Markdown to HTML for bot messages
+    if (type === 'bot') {
+        textP.innerHTML = markdownToHtml(text);
+    } else {
+        textP.textContent = text;
+    }
     
     contentDiv.appendChild(textP);
     messageDiv.appendChild(contentDiv);

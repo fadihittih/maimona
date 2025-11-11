@@ -376,6 +376,51 @@ body.dark-theme {
     border: 1px solid rgba(0, 191, 166, 0.3);
 }
 
+/* Markdown formatting in messages */
+.message-content strong {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.message-content em {
+    font-style: italic;
+    opacity: 0.9;
+}
+
+.message-content code {
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.dark-theme .message-content code {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.message-content ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.message-content li {
+    margin: 0.25rem 0;
+    line-height: 1.6;
+}
+
+.message-content h2,
+.message-content h3,
+.message-content h4 {
+    margin: 0.75rem 0 0.5rem 0;
+    font-weight: 600;
+}
+
+.message-content p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
 .typing-indicator {
     display: flex;
     gap: 4px;

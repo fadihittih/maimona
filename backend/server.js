@@ -10,12 +10,28 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ---------- CORS ----------
+// ===== CORS =====
+// نسمح لموقع الماي مونا + GitHub Pages + localhost للتجربة
+const allowedOrigins = [
+  "https://fadihittih.github.io",
+  "https://fadihittih.github.io/maimona",
+  "http://localhost:3000",
+  "http://localhost:5500",
+  "http://127.0.0.1:5500",
+  "http://localhost:5173",
+];
+
 app.use(
   cors({
-    origin: (_origin, callback) => {
-      // Allow all origins for demo project
-      callback(null, true);
+    origin(origin, callback) {
+      if (!origin) return callback(null, true); // للسيرفرات/التست
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".github.io")
+      ) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST"],
   })
@@ -23,7 +39,7 @@ app.use(
 
 app.use(express.json());
 
-// ---------- System Instruction ----------
+// ===== System Instruction =====
 const SYSTEM_INSTRUCTION = `You are mAImona, an AI-powered crypto market assistant integrated into a live market dashboard.
 Your role:
 - Explain cryptocurrency market data clearly and accurately.
@@ -40,99 +56,94 @@ Technical:
 - Never expose API keys, internal configs, or backend implementation details in responses.
 Always act consistently as 'mAImona'.`;
 
-// ---------- Gemini Setup ----------
+// ===== Gemini Init =====
 const apiKey = process.env.GEMINI_API_KEY;
 let model = null;
+let hasModel = false;
 
 if (!apiKey) {
   console.error("❌ GEMINI_API_KEY is not set");
 } else {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
+
+    // استخدم موديل ثابت مدعوم
     model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       systemInstruction: SYSTEM_INSTRUCTION,
     });
-    console.log("✅ Gemini model initialized");
+
+    hasModel = true;
+    console.log("✅ Gemini model initialized successfully");
   } catch (err) {
-    console.error("❌ Failed to initialize Gemini:", err.message);
+    console.error("❌ Failed to initialize Gemini model:", err.message);
   }
 }
 
-// ---------- Health Check ----------
+// ===== Health Check =====
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
-    hasModel: !!model,
-    message: "mAImona backend is running"
+    hasModel,
+    message: "mAImona backend is running",
   });
 });
 
-// ---------- Chat Endpoint ----------
+// ===== Chat Endpoint =====
 app.post("/api/chat", async (req, res) => {
   try {
-    const { message, marketContext } = req.body || {};
-
-    if (!message || typeof message !== "string" || !message.trim()) {
-      return res
-        .status(400)
-        .json({ error: "Invalid request: 'message' is required." });
-    }
-
-    if (!model) {
-      console.error("❌ /api/chat called without initialized model");
+    if (!hasModel || !model) {
       return res.status(500).json({
-        error: "AI service is not configured correctly on the server."
+        error:
+          "AI backend is not configured correctly. Please check GEMINI_API_KEY.",
       });
     }
 
-    const parts = [];
+    const { message, marketContext } = req.body || {};
+
+    if (!message || typeof message !== "string" || !message.trim()) {
+      return res.status(400).json({
+        error: "Invalid request: 'message' is required.",
+      });
+    }
+
+    let prompt = message.trim();
 
     if (
       marketContext &&
       typeof marketContext === "string" &&
       marketContext.trim()
     ) {
-      parts.push(`Market Context:\n${marketContext.trim()}`);
+      prompt = `You are mAImona.\n\nHere is current market context:\n${marketContext.trim()}\n\nUser question:\n${message.trim()}`;
     }
 
-    parts.push(`User Question:\n${message.trim()}`);
-
-    const prompt = parts.join("\n\n");
-
-    console.log("📩 /api/chat request", {
-      messageLength: message.length,
-      hasMarketContext: !!marketContext
-    });
-
+    // Call Gemini
     const result = await model.generateContent(prompt);
     const reply = result.response.text();
 
     if (!reply || !reply.trim()) {
-      console.error("⚠️ Empty reply from Gemini");
       return res.status(500).json({
         error:
-          "I could not generate a reliable answer. Please try again with a clearer question."
+          "I received an empty response from the AI service. Please try again.",
       });
     }
 
-    console.log("📤 /api/chat reply length:", reply.length);
     res.json({ reply: reply.trim() });
   } catch (err) {
-    console.error("❌ Error in /api/chat:", err.message || err);
+    console.error("❌ Error in /api/chat:", err?.response?.data || err.message || err);
     res.status(500).json({
       error:
-        "I apologize, but I encountered an error processing your request. Please try again in a moment."
+        "I apologize, but I encountered an error processing your request. Please try again in a moment.",
     });
   }
 });
 
-// ---------- 404 ----------
+// ===== 404 =====
 app.use((req, res) => {
   res.status(404).json({ error: "Endpoint not found" });
 });
 
-// ---------- Start ----------
+// ===== Start Server =====
 app.listen(PORT, () => {
-  console.log(`🚀 mAImona backend server started on port ${PORT}`);
+  console.log(`🚀 mAImona backend listening on port ${PORT}`);
 });

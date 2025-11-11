@@ -11,28 +11,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ===== CORS =====
-// نسمح لموقع الماي مونا + GitHub Pages + localhost للتجربة
-const allowedOrigins = [
-  "https://fadihittih.github.io",
-  "https://fadihittih.github.io/maimona",
-  "http://localhost:3000",
-  "http://localhost:5500",
-  "http://127.0.0.1:5500",
-  "http://localhost:5173",
-];
-
+// مفتوح لكل الأورجنز مؤقتًا (MVP)
 app.use(
   cors({
-    origin(origin, callback) {
-      if (!origin) return callback(null, true); // للسيرفرات/التست
-      if (
-        allowedOrigins.includes(origin) ||
-        origin.endsWith(".github.io")
-      ) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS"));
-    },
+    origin: true,
     methods: ["GET", "POST"],
   })
 );
@@ -67,7 +49,6 @@ if (!apiKey) {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
 
-    // استخدم موديل ثابت مدعوم
     model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       systemInstruction: SYSTEM_INSTRUCTION,
@@ -88,11 +69,14 @@ app.get("/api/health", (req, res) => {
     message: "mAImona backend is running",
   });
 });
+
+// ===== Chat Endpoint =====
 app.post("/api/chat", async (req, res) => {
   try {
     if (!hasModel || !model) {
       return res.status(500).json({
-        error: "AI backend is not configured correctly. Please check GEMINI_API_KEY.",
+        error:
+          "AI backend is not configured correctly. Please check GEMINI_API_KEY.",
       });
     }
 
@@ -106,7 +90,11 @@ app.post("/api/chat", async (req, res) => {
 
     let promptText;
 
-    if (marketContext && typeof marketContext === "string" && marketContext.trim()) {
+    if (
+      marketContext &&
+      typeof marketContext === "string" &&
+      marketContext.trim()
+    ) {
       promptText =
         `You are mAImona.\n` +
         `Here is current market context:\n${marketContext.trim()}\n\n` +
@@ -117,7 +105,6 @@ app.post("/api/chat", async (req, res) => {
         `User question:\n${message.trim()}`;
     }
 
-    // 🔹 الشكل المضمون مع Gemini SDK
     const result = await model.generateContent({
       contents: [
         {
@@ -130,25 +117,27 @@ app.post("/api/chat", async (req, res) => {
     const reply = result?.response?.text?.();
 
     if (!reply || !reply.trim()) {
-      console.error("⚠️ Empty reply from Gemini:", JSON.stringify(result, null, 2));
+      console.error(
+        "⚠️ Empty reply from Gemini:",
+        JSON.stringify(result, null, 2)
+      );
       return res.status(500).json({
-        error: "I received an empty response from the AI service. Please try again.",
+        error:
+          "I received an empty response from the AI service. Please try again.",
       });
     }
 
     return res.json({ reply: reply.trim() });
-
   } catch (err) {
     console.error("❌ Error in /api/chat:", err?.message || err);
-    if (err?.response?.data) {
-      console.error("🔍 Gemini response data:", JSON.stringify(err.response.data, null, 2));
-    }
     return res.status(500).json({
       error:
         "I apologize, but I encountered an error processing your request. Please try again in a moment.",
     });
   }
-  // ===== 404 =====
+});
+
+// ===== 404 =====
 app.use((req, res) => {
   res.status(404).json({ error: "Endpoint not found" });
 });
@@ -156,5 +145,4 @@ app.use((req, res) => {
 // ===== Start Server =====
 app.listen(PORT, () => {
   console.log(`🚀 mAImona backend listening on port ${PORT}`);
-}); 
 });

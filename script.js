@@ -203,19 +203,6 @@ function startRESTPolling() {
 }
 
 /* ===========================
-   AI Response Templates
-   =========================== */
-
-const aiResponses = {
-    'btc': 'Let me check the current BTC/USDT data...',
-    'eth': 'Let me check the current ETH/USDT data...',
-    'top': 'Let me show you the top traded coins by volume...',
-    'funding': 'The Funding Rate is a mechanism used in perpetual futures contracts to anchor the market price to the spot price. It\'s a periodic payment between traders based on the difference between perpetual contract prices and spot prices. When the funding rate is positive, long position holders pay short position holders, and vice versa. This helps prevent significant deviations between the perpetual and spot markets.',
-    'volume': 'Trading volume represents the total amount of an asset that has been traded during a specific period. Higher volumes typically indicate stronger interest and liquidity, making it easier to enter and exit positions. Volume is a key indicator traders use to confirm price movements and trends.',
-    'default': 'I can help you with real-time market data, price information, trading volumes, and explanations of crypto concepts. Try asking about specific coins, market trends, or trading terminology. Remember, this is for educational purposes only, not financial advice.'
-};
-
-/* ===========================
    State Management
    =========================== */
 
@@ -253,6 +240,10 @@ function scrollToChat() {
    Chat Functionality
    =========================== */
 
+// Backend API URL - CONFIGURE THIS AFTER DEPLOYMENT
+// Replace with your deployed backend URL (e.g., https://your-backend.onrender.com/api/chat)
+const MAIMONA_API_URL = "https://YOUR-BACKEND-DOMAIN/api/chat";
+
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 const sendButton = document.getElementById('sendButton');
@@ -263,7 +254,7 @@ chatInput.addEventListener('keypress', (e) => {
     }
 });
 
-function sendMessage() {
+async function sendMessage() {
     const message = chatInput.value.trim();
     if (!message) return;
     
@@ -271,15 +262,103 @@ function sendMessage() {
     addMessage(message, 'user');
     chatInput.value = '';
     
+    // Disable input while processing
+    chatInput.disabled = true;
+    sendButton.disabled = true;
+    
     // Show typing indicator
     showTypingIndicator();
     
-    // Simulate AI response delay
-    setTimeout(() => {
+    try {
+        // Prepare market context (optional - include current top coins data)
+        const marketContext = prepareMarketContext();
+        
+        // Call backend API
+        const response = await fetch(MAIMONA_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                marketContext: marketContext
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
         hideTypingIndicator();
-        const response = generateAIResponse(message);
-        addMessage(response, 'bot');
-    }, 1500);
+        
+        if (data.reply) {
+            addMessage(data.reply, 'bot');
+        } else if (data.error) {
+            addMessage(data.error, 'bot');
+        } else {
+            addMessage('I received an unexpected response. Please try again.', 'bot');
+        }
+        
+    } catch (error) {
+        console.error('Error calling mAImona API:', error);
+        hideTypingIndicator();
+        
+        // Fallback to local response if API fails
+        const fallbackResponse = generateFallbackResponse(message);
+        addMessage(fallbackResponse, 'bot');
+    } finally {
+        // Re-enable input
+        chatInput.disabled = false;
+        sendButton.disabled = false;
+        chatInput.focus();
+    }
+}
+
+/**
+ * Prepare market context to send with the chat request
+ * Includes current top coins and their data
+ */
+function prepareMarketContext() {
+    if (!marketData || marketData.length === 0) {
+        return null;
+    }
+    
+    const topCoins = marketData.slice(0, 10);
+    const contextLines = topCoins.map(coin => 
+        `${formatSymbol(coin.symbol)}: $${formatNumber(coin.price)}, ${coin.change24h > 0 ? '+' : ''}${coin.change24h.toFixed(2)}%, Vol: $${formatVolume(coin.volume24h)}`
+    );
+    
+    return `Current Top 10 Coins by Volume:\n${contextLines.join('\n')}`;
+}
+
+/**
+ * Fallback response generator (used when backend is unavailable)
+ * Provides basic responses using local market data
+ */
+function generateFallbackResponse(message) {
+    const lowerMessage = message.toLowerCase();
+    
+    // Check for specific keywords with live data
+    if (lowerMessage.includes('btc') || lowerMessage.includes('bitcoin')) {
+        const btcData = marketData.find(c => c.symbol === 'BTCUSDT');
+        if (btcData) {
+            return `Based on current live data, BTC/USDT is trading at $${formatNumber(btcData.price)}, showing a ${btcData.change24h > 0 ? 'gain' : 'decline'} of ${btcData.change24h > 0 ? '+' : ''}${btcData.change24h.toFixed(2)}% in the last 24 hours. The trading volume stands at $${formatVolume(btcData.volume24h)}.`;
+        }
+    } else if (lowerMessage.includes('eth') || lowerMessage.includes('ethereum')) {
+        const ethData = marketData.find(c => c.symbol === 'ETHUSDT');
+        if (ethData) {
+            return `ETH/USDT is currently priced at $${formatNumber(ethData.price)}, ${ethData.change24h > 0 ? 'up' : 'down'} ${ethData.change24h > 0 ? '+' : ''}${ethData.change24h.toFixed(2)}% in the last 24 hours.`;
+        }
+    } else if (lowerMessage.includes('top') && (lowerMessage.includes('coin') || lowerMessage.includes('traded'))) {
+        if (marketData.length >= 3) {
+            const top3 = marketData.slice(0, 3);
+            return `The top 3 most traded coins by 24h volume are: 1) ${formatSymbol(top3[0].symbol)} ($${formatVolume(top3[0].volume24h)}), 2) ${formatSymbol(top3[1].symbol)} ($${formatVolume(top3[1].volume24h)}), and 3) ${formatSymbol(top3[2].symbol)} ($${formatVolume(top3[2].volume24h)}).`;
+        }
+    }
+    
+    return 'I apologize, but I\'m having trouble connecting to my AI service at the moment. Please check that the backend is properly configured and try again. In the meantime, you can explore the live market data in the table below.';
 }
 
 function sendSuggestion(text) {
@@ -328,46 +407,6 @@ function hideTypingIndicator() {
     if (indicator) {
         indicator.remove();
     }
-}
-
-function generateAIResponse(message) {
-    const lowerMessage = message.toLowerCase();
-    
-    // Check for specific keywords with live data
-    if (lowerMessage.includes('btc') || lowerMessage.includes('bitcoin')) {
-        const btcData = marketData.find(c => c.symbol === 'BTCUSDT');
-        if (btcData) {
-            return `Based on current live data, BTC/USDT is trading at $${formatNumber(btcData.price)}, showing a ${btcData.change24h > 0 ? 'gain' : 'decline'} of ${btcData.change24h > 0 ? '+' : ''}${btcData.change24h.toFixed(2)}% in the last 24 hours. The trading volume stands at $${formatVolume(btcData.volume24h)}, indicating ${btcData.volume24h > 20000000000 ? 'very strong' : btcData.volume24h > 10000000000 ? 'strong' : 'moderate'} market activity.`;
-        }
-        return aiResponses.btc;
-    } else if (lowerMessage.includes('eth') || lowerMessage.includes('ethereum')) {
-        const ethData = marketData.find(c => c.symbol === 'ETHUSDT');
-        if (ethData) {
-            return `ETH/USDT is currently priced at $${formatNumber(ethData.price)}, ${ethData.change24h > 0 ? 'up' : 'down'} ${ethData.change24h > 0 ? '+' : ''}${ethData.change24h.toFixed(2)}% in the last 24 hours. With a 24h volume of $${formatVolume(ethData.volume24h)}, Ethereum shows ${ethData.change24h > 0 ? 'positive momentum' : 'some correction'}.`;
-        }
-        return aiResponses.eth;
-    } else if (lowerMessage.includes('top') && (lowerMessage.includes('coin') || lowerMessage.includes('traded'))) {
-        if (marketData.length >= 3) {
-            const top3 = marketData.slice(0, 3);
-            return `The top 3 most traded coins by 24h volume are: 1) ${formatSymbol(top3[0].symbol)} ($${formatVolume(top3[0].volume24h)}), 2) ${formatSymbol(top3[1].symbol)} ($${formatVolume(top3[1].volume24h)}), and 3) ${formatSymbol(top3[2].symbol)} ($${formatVolume(top3[2].volume24h)}). These coins represent the highest liquidity and trader interest in the current market.`;
-        }
-        return aiResponses.top;
-    } else if (lowerMessage.includes('funding rate') || lowerMessage.includes('funding')) {
-        return aiResponses.funding;
-    } else if (lowerMessage.includes('volume')) {
-        return aiResponses.volume;
-    } else if (lowerMessage.includes('analyze')) {
-        // Extract coin from message
-        const coin = extractCoinFromMessage(lowerMessage);
-        if (coin) {
-            const coinData = marketData.find(c => c.symbol === coin || c.symbol === coin.replace('/', ''));
-            if (coinData) {
-                return `${formatSymbol(coinData.symbol)} is currently trading at $${formatNumber(coinData.price)}, with a 24h change of ${coinData.change24h > 0 ? '+' : ''}${coinData.change24h.toFixed(2)}%. The 24h trading volume is $${formatVolume(coinData.volume24h)}. ${coinData.change24h > 0 ? 'The price shows upward momentum' : 'The price is experiencing a correction'} within the current market conditions. This is live data from Binance.`;
-            }
-        }
-    }
-    
-    return aiResponses.default;
 }
 
 function extractCoinFromMessage(message) {
